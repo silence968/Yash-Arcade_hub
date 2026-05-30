@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>🕹 ARCADE HUB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --p1:#6366f1;--p1l:#818cf8;--p1d:#312e81;
+  --p2:#f43f5e;--p2l:#fb7185;--p2d:#881337;
+  --ac:#10b981;--acl:#34d399;
+  --bot:#f59e0b;--botl:#fcd34d;
+  --bg:#09090b;--sf:#111113;--sf2:#1c1c1f;--bd:#27272a;
+  --tx:#e4e4e7;--mt:#52525b;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--tx);font-family:'Share Tech Mono',monospace;min-height:100vh;overflow-x:hidden}
+body{
+  background-image:linear-gradient(rgba(99,102,241,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,.03) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);pointer-events:none;z-index:9999}
+.orb{font-family:'Orbitron',monospace}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
+button{font-family:'Share Tech Mono',monospace;cursor:pointer;transition:all .15s ease;border:none;outline:none}
+button:hover{transform:translateY(-1px)}
+button:active{transform:translateY(0) scale(.97)}
+input{font-family:'Share Tech Mono',monospace;outline:none;transition:border-color .2s,box-shadow .2s}
+
+/* NAV */
+#nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:var(--sf);border-bottom:1px solid var(--bd);height:52px;position:sticky;top:0;z-index:100}
+#nav-sub{color:var(--mt);font-size:11px;letter-spacing:2px;margin-left:10px}
+#score-pill{display:flex;background:var(--sf2);border:1px solid var(--bd);border-radius:10px;overflow:hidden;font-size:12px}
+#score-p1{padding:5px 14px;color:var(--p1l);border-right:1px solid var(--bd)}
+#score-p2{padding:5px 14px;color:var(--p2l)}
+.nav-btn{background:var(--sf2);border:1px solid var(--bd)!important;color:var(--tx);border-radius:8px;padding:6px 14px;font-size:11px;letter-spacing:2px}
+
+/* PAGES */
+.page{display:none;animation:fadeIn .3s ease forwards}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.slide-up{animation:slideUp .35s ease forwards}
+
+/* LOBBY */
+#lobby{max-width:760px;margin:0 auto;padding:36px 24px}
+.lobby-header{text-align:center;margin-bottom:32px}
+.lobby-title{font-size:clamp(24px,5vw,40px);font-weight:900;letter-spacing:6px;color:var(--tx);text-shadow:0 0 8px rgba(99,102,241,.9),0 0 20px rgba(99,102,241,.5);margin-bottom:8px}
+.lobby-sub{color:var(--mt);font-size:12px;letter-spacing:4px}
+
+/* MODE TABS */
+.mode-tabs{display:flex;gap:0;background:var(--sf2);border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:28px}
+.mode-tab{flex:1;padding:12px 20px;font-size:12px;letter-spacing:2px;color:var(--mt);background:transparent;border:none;transition:all .2s}
+.mode-tab.active{background:var(--p1);color:#fff;text-shadow:0 0 8px rgba(99,102,241,.6)}
+.mode-tab:hover:not(.active){background:rgba(255,255,255,.04);color:var(--tx)}
+
+/* PLAYER GRID */
+.player-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px}
+.player-card{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:20px}
+.player-label{font-size:11px;font-weight:700;letter-spacing:3px;margin-bottom:10px}
+.arcade-input{width:100%;background:var(--sf2);border:1px solid var(--bd);color:var(--tx);border-radius:8px;padding:10px 14px;font-size:14px}
+.arcade-input:focus{border-color:var(--p1);box-shadow:0 0 0 2px rgba(99,102,241,.25)}
+.arcade-input.p2:focus{border-color:var(--p2);box-shadow:0 0 0 2px rgba(244,63,94,.25)}
+
+/* BOT PANEL */
+#bot-panel{margin-bottom:28px}
+.bot-card{background:var(--sf);border:1px solid rgba(245,158,11,.2);border-radius:14px;padding:20px}
+.bot-title{font-size:11px;font-weight:700;letter-spacing:3px;color:var(--bot);margin-bottom:14px}
+.diff-btns{display:flex;gap:8px}
+.diff-btn{flex:1;padding:10px 6px;border-radius:10px;font-size:11px;letter-spacing:1px;border:1px solid var(--bd)!important;background:var(--sf2);color:var(--mt);transition:all .2s}
+.diff-btn.active-easy{background:rgba(16,185,129,.15);border-color:var(--ac)!important;color:var(--acl)}
+.diff-btn.active-medium{background:rgba(245,158,11,.15);border-color:var(--bot)!important;color:var(--botl)}
+.diff-btn.active-hard{background:rgba(244,63,94,.15);border-color:var(--p2)!important;color:var(--p2l)}
+.diff-btn:hover:not(.active-easy):not(.active-medium):not(.active-hard){background:rgba(255,255,255,.05);color:var(--tx)}
+
+/* GAME GRID */
+.game-select-label{color:var(--mt);font-size:11px;letter-spacing:4px;text-align:center;margin-bottom:14px}
+.game-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px}
+.game-card{background:var(--sf);border:1px solid var(--bd)!important;border-radius:14px;padding:20px 22px;text-align:left;color:var(--tx);width:100%;transition:transform .2s,box-shadow .2s,border-color .2s!important}
+.game-card:hover{transform:translateY(-4px) scale(1.02);box-shadow:0 0 24px rgba(99,102,241,.3),0 8px 32px rgba(0,0,0,.5);border-color:rgba(99,102,241,.5)!important}
+.game-icon{font-size:28px;margin-bottom:8px}
+.game-name{font-size:12px;font-weight:700;letter-spacing:2px;margin-bottom:5px}
+.game-desc{color:var(--mt);font-size:11px}
+.game-bot-badge{display:inline-block;font-size:9px;letter-spacing:1px;padding:2px 7px;border-radius:20px;background:rgba(245,158,11,.15);color:var(--botl);border:1px solid rgba(245,158,11,.3);margin-top:6px}
+
+/* SCOREBOARD */
+#overall-score{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:20px 28px;display:flex;align-items:center;justify-content:space-between}
+.os-name{font-size:11px;letter-spacing:2px;margin-bottom:4px}
+.os-num{font-size:36px;font-weight:900}
+.os-mid{text-align:center}
+.os-mid-label{color:var(--mt);font-size:10px;letter-spacing:3px;margin-bottom:8px}
+
+/* GAME AREA */
+#game-area{padding:28px 24px;display:flex;flex-direction:column;align-items:center;min-height:calc(100vh - 52px)}
+
+/* TURN BAR */
+.turn-bar{display:flex;align-items:center;justify-content:center;gap:16px;padding:10px 24px;background:var(--sf2);border:1px solid var(--bd);border-radius:12px;margin-bottom:16px;font-size:13px}
+.turn-dot{width:10px;height:10px;border-radius:50%;position:relative;transition:box-shadow .3s}
+.turn-dot.active::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid currentColor;animation:pulseRing 1.2s ease-out infinite}
+@keyframes pulseRing{0%{transform:scale(.9);opacity:1}100%{transform:scale(1.5);opacity:0}}
+
+/* DIFFICULTY BADGE shown in game */
+.diff-badge{display:inline-flex;align-items:center;gap:6px;font-size:10px;letter-spacing:2px;padding:4px 12px;border-radius:20px;margin-bottom:12px}
+.diff-badge.easy{background:rgba(16,185,129,.12);color:var(--acl);border:1px solid rgba(16,185,129,.3)}
+.diff-badge.medium{background:rgba(245,158,11,.12);color:var(--botl);border:1px solid rgba(245,158,11,.3)}
+.diff-badge.hard{background:rgba(244,63,94,.12);color:var(--p2l);border:1px solid rgba(244,63,94,.3)}
+
+/* WIN OVERLAY */
+.win-overlay{position:absolute;inset:0;z-index:50;background:rgba(9,9,11,.85);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;border-radius:inherit;animation:fadeIn .3s ease}
+.win-card{background:var(--sf);border:1px solid var(--bd);border-radius:20px;padding:36px 52px;text-align:center;box-shadow:0 0 60px rgba(99,102,241,.25),0 24px 64px rgba(0,0,0,.6);animation:winPulse 1.6s ease-in-out infinite}
+@keyframes winPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+.win-emoji{font-size:56px;margin-bottom:12px}
+.win-msg{font-size:22px;font-weight:900;letter-spacing:2px;margin-bottom:8px}
+.win-sub{color:var(--mt);font-size:13px;margin-bottom:28px}
+.win-btn{background:var(--p1);color:#fff;padding:12px 32px;border-radius:10px;font-size:14px;font-weight:700;letter-spacing:2px}
+
+/* CONFETTI */
+.confetti-piece{position:fixed;top:-20px;pointer-events:none;animation:confettiFall var(--dur) var(--delay) ease-in forwards}
+@keyframes confettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
+/* TIC TAC TOE */
+#ttt-wrap{display:flex;flex-direction:column;align-items:center;gap:14px}
+.ttt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ttt-cell{width:100px;height:100px;border-radius:12px;font-size:44px;font-weight:900;background:var(--sf2);border:2px solid var(--bd);cursor:pointer;transition:all .2s}
+.ttt-cell:hover:not([data-filled]){background:rgba(255,255,255,.05)}
+.ttt-cell.x{color:var(--p1l)}
+.ttt-cell.o{color:var(--p2l)}
+.ttt-cell.o.bot{color:var(--botl)}
+.ttt-cell.win-x{background:rgba(99,102,241,.15);border-color:var(--p1l);box-shadow:0 0 16px rgba(99,102,241,.5)}
+.ttt-cell.win-o{background:rgba(244,63,94,.15);border-color:var(--p2l);box-shadow:0 0 16px rgba(244,63,94,.5)}
+.ttt-cell.win-o.bot{background:rgba(245,158,11,.15);border-color:var(--botl);box-shadow:0 0 16px rgba(245,158,11,.5)}
+.ttt-hint{color:var(--mt);font-size:12px;letter-spacing:2px}
+
+/* CONNECT FOUR */
+#c4-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.c4-board{background:var(--sf2);border:1px solid var(--bd);border-radius:16px;padding:12px;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.c4-hover-row{display:flex;gap:6px;margin-bottom:4px}
+.c4-hover-cell{width:52px;height:18px;display:flex;align-items:center;justify-content:center}
+.c4-grid{display:flex;flex-direction:column;gap:6px}
+.c4-row{display:flex;gap:6px}
+.c4-cell{width:52px;height:52px;border-radius:50%;border:2px solid var(--bd);background:var(--bg);cursor:pointer;transition:background .15s,box-shadow .3s;position:relative;overflow:hidden}
+.c4-cell.hover-hint{background:rgba(255,255,255,.05)}
+.c4-cell.p1{background:var(--p1);border-color:rgba(99,102,241,.6)}
+.c4-cell.p2{background:var(--p2);border-color:rgba(244,63,94,.6)}
+.c4-cell.bot{background:var(--bot);border-color:rgba(245,158,11,.6)}
+.c4-cell.win-cell{border-color:#fbbf24;box-shadow:0 0 20px #fbbf24,0 0 40px rgba(251,191,36,.3)}
+@keyframes chipDrop{0%{transform:translateY(-300px);opacity:0}70%{transform:translateY(6px)}85%{transform:translateY(-3px)}100%{transform:translateY(0);opacity:1}}
+.chip-drop{animation:chipDrop .38s cubic-bezier(.4,0,.6,1) forwards}
+
+/* AIR HOCKEY */
+#ah-wrap{display:flex;flex-direction:column;align-items:center;gap:14px}
+#ah-canvas{display:block;max-width:100%;border-radius:12px;box-shadow:0 0 0 2px rgba(99,102,241,.2),0 16px 48px rgba(0,0,0,.6)}
+.ah-controls{display:flex;gap:32px;font-size:12px;color:var(--mt)}
+kbd{background:var(--sf2);border:1px solid var(--bd);border-radius:4px;padding:1px 5px;font-family:'Share Tech Mono',monospace;font-size:11px}
+.ah-hint{color:var(--mt);font-size:11px;letter-spacing:2px}
+
+/* MEMORY MATCH */
+#mm-wrap{display:flex;flex-direction:column;align-items:center;gap:14px}
+.mm-score-row{display:flex;gap:24px;align-items:center}
+.mm-score-card{text-align:center;padding:10px 24px;background:var(--sf2);border:1px solid var(--bd);border-radius:12px;transition:all .3s}
+.mm-score-card.active-p1{border-color:rgba(99,102,241,.4);box-shadow:0 0 16px rgba(99,102,241,.2)}
+.mm-score-card.active-p2{border-color:rgba(244,63,94,.4);box-shadow:0 0 16px rgba(244,63,94,.2)}
+.mm-score-card.active-bot{border-color:rgba(245,158,11,.4);box-shadow:0 0 16px rgba(245,158,11,.2)}
+.mm-sname{font-size:11px;letter-spacing:2px;margin-bottom:4px}
+.mm-snum{font-size:30px;font-weight:900}
+.mm-mid{text-align:center}
+.mm-flash{background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:6px 14px;font-size:11px;letter-spacing:2px;color:var(--mt);min-width:80px;text-align:center;transition:all .2s}
+.mm-flash.match{background:rgba(16,185,129,.15);border-color:var(--ac);color:var(--ac)}
+.mm-flash.miss{background:rgba(244,63,94,.15);border-color:var(--p2);color:var(--p2l)}
+.mm-pairs-left{color:var(--mt);font-size:10px;margin-top:4px;letter-spacing:1px;text-align:center}
+.mm-turn{font-size:12px;letter-spacing:2px;background:var(--sf2);border-radius:8px;padding:6px 20px}
+.mm-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+
+/* CARD FLIP */
+.card-scene{perspective:600px;width:62px;height:62px}
+.card-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.4,0,.2,1)}
+.card-inner.flipped{transform:rotateY(180deg)}
+.card-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.card-back{background:var(--sf2);border:1px solid var(--bd);font-size:22px;filter:grayscale(1);opacity:.4}
+.card-front{background:var(--sf);border:1px solid var(--bd);transform:rotateY(180deg);font-size:28px;cursor:default}
+.card-front.matched{border-color:var(--ac)!important;background:rgba(16,185,129,.08)}
+
+.reset-btn{background:var(--sf2);border:1px solid var(--bd)!important;color:var(--mt);padding:8px 24px;border-radius:8px;font-size:12px;letter-spacing:2px}
+
+/* BOT THINKING INDICATOR */
+@keyframes botBlink{0%,100%{opacity:1}50%{opacity:.2}}
+.bot-thinking{display:inline-flex;gap:4px;align-items:center}
+.bot-thinking span{width:6px;height:6px;border-radius:50%;background:var(--botl);animation:botBlink 1s ease-in-out infinite}
+.bot-thinking span:nth-child(2){animation-delay:.2s}
+.bot-thinking span:nth-child(3){animation-delay:.4s}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div id="nav">
+  <div style="display:flex;align-items:center">
+    <span class="orb" style="color:var(--p1l);font-weight:900;font-size:13px;letter-spacing:3px">🕹 ARCADE HUB</span>
+    <span id="nav-sub" style="display:none"></span>
+  </div>
+  <div id="score-pill">
+    <div id="score-p1" class="orb" style="color:var(--p1l);padding:5px 14px;border-right:1px solid var(--bd)">P1 <b>0</b></div>
+    <div id="score-p2" class="orb" style="color:var(--p2l);padding:5px 14px"><b>0</b> P2</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button class="nav-btn" id="btn-lobby" style="display:none" onclick="goLobby()">← LOBBY</button>
+    <button class="nav-btn" onclick="resetScores()" style="background:transparent;color:var(--mt)">RESET SCORES</button>
+  </div>
+</div>
+
+<!-- LOBBY PAGE -->
+<div id="page-lobby" class="page active">
+  <div id="lobby">
+    <div class="lobby-header">
+      <div style="font-size:48px;margin-bottom:12px">🕹</div>
+      <div class="lobby-title orb">ARCADE HUB</div>
+      <div class="lobby-sub">CHOOSE YOUR MODE · PICK A GAME · PLAY!</div>
+    </div>
+
+    <!-- MODE TABS -->
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="tab-pvp" onclick="setMode('pvp')">👥 2 PLAYERS (LOCAL)</button>
+      <button class="mode-tab" id="tab-bot" onclick="setMode('bot')">🤖 VS BOT (SOLO)</button>
+    </div>
+
+    <!-- PvP SECTION -->
+    <div id="pvp-section">
+      <div class="player-grid">
+        <div class="player-card" style="box-shadow:0 0 0 1px rgba(99,102,241,.13)">
+          <div class="player-label" style="color:var(--p1)">◈ PLAYER 1</div>
+          <input class="arcade-input" id="inp-p1" value="PLAYER 1" maxlength="16" placeholder="Player 1 name" oninput="updateNames()"/>
+        </div>
+        <div class="player-card" style="box-shadow:0 0 0 1px rgba(244,63,94,.13)">
+          <div class="player-label" style="color:var(--p2)">◈ PLAYER 2</div>
+          <input class="arcade-input p2" id="inp-p2" value="PLAYER 2" maxlength="16" placeholder="Player 2 name" oninput="updateNames()"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOT SECTION -->
+    <div id="bot-section" style="display:none">
+      <div id="bot-panel">
+        <div class="player-grid" style="margin-bottom:16px">
+          <div class="player-card" style="box-shadow:0 0 0 1px rgba(99,102,241,.13)">
+            <div class="player-label" style="color:var(--p1)">◈ YOUR NAME</div>
+            <input class="arcade-input" id="inp-solo" value="PLAYER 1" maxlength="16" placeholder="Your name" oninput="updateNames()"/>
+          </div>
+          <div class="player-card" style="box-shadow:0 0 0 1px rgba(245,158,11,.2);background:rgba(245,158,11,.04)">
+            <div class="player-label" style="color:var(--bot)">🤖 OPPONENT</div>
+            <div style="background:var(--sf2);border:1px solid var(--bd);color:var(--botl);border-radius:8px;padding:10px 14px;font-size:14px;letter-spacing:2px">A.I. BOT</div>
+          </div>
+        </div>
+        <div class="bot-card">
+          <div class="bot-title">🎮 SELECT BOT DIFFICULTY</div>
+          <div class="diff-btns">
+            <button class="diff-btn active-easy" id="diff-easy" onclick="setDiff('easy')">
+              🟢 EASY<br><span style="font-size:9px;color:inherit;opacity:.7;margin-top:3px;display:block">Random moves</span>
+            </button>
+            <button class="diff-btn" id="diff-medium" onclick="setDiff('medium')">
+              🟡 MEDIUM<br><span style="font-size:9px;color:inherit;opacity:.7;margin-top:3px;display:block">Smart sometimes</span>
+            </button>
+            <button class="diff-btn" id="diff-hard" onclick="setDiff('hard')">
+              🔴 HARD<br><span style="font-size:9px;color:inherit;opacity:.7;margin-top:3px;display:block">Unbeatable AI</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="game-select-label">SELECT GAME</div>
+    <div class="game-grid">
+      <button class="game-card" onclick="launchGame('ttt')">
+        <div class="game-icon" style="color:var(--p1);text-shadow:0 0 12px var(--p1)">⊠</div>
+        <div class="game-name orb">TIC-TAC-TOE</div>
+        <div class="game-desc">3×3 grid · Classic strategy</div>
+        <div class="game-bot-badge" id="badge-ttt" style="display:none">🤖 BOT SUPPORTED</div>
+      </button>
+      <button class="game-card" onclick="launchGame('c4')">
+        <div class="game-icon" style="color:var(--p2);text-shadow:0 0 12px var(--p2)">⬤</div>
+        <div class="game-name orb">CONNECT FOUR</div>
+        <div class="game-desc">7×6 board · Drop &amp; connect</div>
+        <div class="game-bot-badge" id="badge-c4" style="display:none">🤖 BOT SUPPORTED</div>
+      </button>
+      <button class="game-card" onclick="launchGame('ah')">
+        <div class="game-icon" style="color:var(--ac);text-shadow:0 0 12px var(--ac)">◉</div>
+        <div class="game-name orb">AIR HOCKEY</div>
+        <div class="game-desc">Canvas physics · Puck battle</div>
+        <div class="game-bot-badge" id="badge-ah" style="display:none">🤖 BOT SUPPORTED</div>
+      </button>
+      <button class="game-card" onclick="launchGame('mm')">
+        <div class="game-icon" style="color:#f59e0b;text-shadow:0 0 12px #f59e0b">⊟</div>
+        <div class="game-name orb">MEMORY MATCH</div>
+        <div class="game-desc">12 pairs · Flip &amp; remember</div>
+        <div class="game-bot-badge" id="badge-mm" style="display:none">🤖 BOT SUPPORTED</div>
+      </button>
+    </div>
+
+    <div id="overall-score" style="display:none">
+      <div>
+        <div class="os-name" style="color:var(--p1l)" id="os-n1">◈ PLAYER 1</div>
+        <div class="os-num orb" style="color:var(--p1l);text-shadow:0 0 8px rgba(99,102,241,.9)" id="os-s1">0</div>
+      </div>
+      <div class="os-mid">
+        <div class="os-mid-label">TOTAL WINS</div>
+        <button class="reset-btn" onclick="resetScores()">RESET</button>
+      </div>
+      <div>
+        <div class="os-name" style="color:var(--p2l)" id="os-n2">PLAYER 2 ◈</div>
+        <div class="os-num orb" style="color:var(--p2l);text-shadow:0 0 8px rgba(244,63,94,.9)" id="os-s2">0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GAME PAGE -->
+<div id="page-game" class="page">
+  <div id="game-area"></div>
+</div>
+
+<div id="confetti-container" style="position:fixed;inset:0;pointer-events:none;z-index:1000;overflow:hidden"></div>
+
+<script>
+/* ══════════════════════ GLOBAL STATE ══════════════════════ */
+let p1Name='PLAYER 1', p2Name='PLAYER 2';
+let totalScores=[0,0];
+let activeGame=null;
+let gameMode='pvp';       // 'pvp' | 'bot'
+let botDiff='easy';       // 'easy' | 'medium' | 'hard'
+let ahRAF=null, ahKeys={};
+
+const GAME_NAMES={ttt:'TIC-TAC-TOE',c4:'CONNECT FOUR',ah:'AIR HOCKEY',mm:'MEMORY MATCH'};
+const DIFF_LABEL={easy:'🟢 EASY',medium:'🟡 MEDIUM',hard:'🔴 HARD'};
+
+/* ── MODE / DIFFICULTY ── */
+function setMode(m){
+  gameMode=m;
+  document.getElementById('tab-pvp').classList.toggle('active',m==='pvp');
+  document.getElementById('tab-bot').classList.toggle('active',m==='bot');
+  document.getElementById('pvp-section').style.display=m==='pvp'?'':'none';
+  document.getElementById('bot-section').style.display=m==='bot'?'':'none';
+  ['ttt','c4','ah','mm'].forEach(id=>{
+    document.getElementById('badge-'+id).style.display=m==='bot'?'':'none';
+  });
+  updateNames();
+}
+function setDiff(d){
+  botDiff=d;
+  ['easy','medium','hard'].forEach(x=>{
+    const b=document.getElementById('diff-'+x);
+    b.className='diff-btn'+(x===d?' active-'+x:'');
+  });
+}
+
+/* ── NAMES ── */
+function updateNames(){
+  if(gameMode==='pvp'){
+    p1Name=document.getElementById('inp-p1').value||'P1';
+    p2Name=document.getElementById('inp-p2').value||'P2';
+  } else {
+    p1Name=document.getElementById('inp-solo').value||'YOU';
+    p2Name='A.I. BOT';
+  }
+  document.getElementById('score-p1').innerHTML=`<span style="color:var(--p1l)">${p1Name.slice(0,8)} <b>${totalScores[0]}</b></span>`;
+  document.getElementById('score-p2').innerHTML=`<span style="color:${gameMode==='bot'?'var(--botl)':'var(--p2l)'}"><b>${totalScores[1]}</b> ${p2Name.slice(0,8)}</span>`;
+}
+function updateScoreDisplay(){
+  updateNames();
+  const os=document.getElementById('overall-score');
+  if(totalScores[0]>0||totalScores[1]>0){
+    os.style.display='flex';
+    document.getElementById('os-s1').textContent=totalScores[0];
+    document.getElementById('os-s2').textContent=totalScores[1];
+    document.getElementById('os-n1').textContent='◈ '+p1Name;
+    document.getElementById('os-n2').textContent=p2Name+' ◈';
+    document.getElementById('os-s2').style.color=gameMode==='bot'?'var(--botl)':'var(--p2l)';
+    document.getElementById('os-n2').style.color=gameMode==='bot'?'var(--botl)':'var(--p2l)';
+  } else { os.style.display='none'; }
+}
+function recordWin(player){ totalScores[player-1]++; updateScoreDisplay(); }
+function resetScores(){ totalScores=[0,0]; updateScoreDisplay(); }
+
+function goLobby(){
+  stopAirHockey();
+  activeGame=null;
+  document.getElementById('page-lobby').classList.add('active');
+  document.getElementById('page-game').classList.remove('active');
+  document.getElementById('btn-lobby').style.display='none';
+  document.getElementById('nav-sub').style.display='none';
+  document.getElementById('game-area').innerHTML='';
+  updateScoreDisplay();
+}
+
+function launchGame(id){
+  stopAirHockey();
+  updateNames();
+  activeGame=id;
+  document.getElementById('page-lobby').classList.remove('active');
+  document.getElementById('page-game').classList.add('active');
+  document.getElementById('btn-lobby').style.display='';
+  const sub=document.getElementById('nav-sub');
+  sub.style.display='';
+  sub.textContent=' › '+GAME_NAMES[id]+(gameMode==='bot'?' · '+DIFF_LABEL[botDiff]+' BOT':'');
+  const area=document.getElementById('game-area');
+  area.innerHTML='';
+  updateScoreDisplay();
+  if(id==='ttt') buildTTT(area);
+  else if(id==='c4') buildC4(area);
+  else if(id==='ah') buildAH(area);
+  else if(id==='mm') buildMM(area);
+}
+
+/* ══════════════════════ CONFETTI ══════════════════════ */
+const CC=['#6366f1','#818cf8','#f43f5e','#fb7185','#10b981','#34d399','#f59e0b','#38bdf8'];
+function spawnConfetti(){
+  const c=document.getElementById('confetti-container'); c.innerHTML='';
+  for(let i=0;i<56;i++){
+    const el=document.createElement('div'); el.className='confetti-piece';
+    const sz=(7+Math.random()*9)+'px';
+    el.style.cssText=`left:${Math.random()*100}%;width:${sz};height:${sz};background:${CC[i%CC.length]};border-radius:${i%3===0?'50%':i%3===1?'2px':'0'};transform:rotate(${Math.random()*360}deg);--dur:${2.2+Math.random()*2}s;--delay:${Math.random()*1.8}s;`;
+    c.appendChild(el);
+  }
+  setTimeout(()=>{c.innerHTML='';},5000);
+}
+
+/* ══════════════════════ WIN OVERLAY ══════════════════════ */
+function createWinOverlay(msg,sub,onAgain){
+  const d=document.createElement('div'); d.className='win-overlay';
+  d.innerHTML=`<div class="win-card"><div class="win-emoji">🏆</div><div class="win-msg orb">${msg}</div><div class="win-sub">${sub||''}</div><button class="win-btn btn">PLAY AGAIN</button></div>`;
+  d.querySelector('.win-btn').onclick=onAgain;
+  spawnConfetti();
+  return d;
+}
+
+/* ══════════════════════ TURN BAR ══════════════════════ */
+function p2Color(){ return gameMode==='bot'?'var(--botl)':'var(--p2l)'; }
+function p2DotColor(){ return gameMode==='bot'?'var(--bot)':'var(--p2)'; }
+
+function createTurnBar(cur){
+  const d=document.createElement('div'); d.className='turn-bar'; d.id='turn-bar';
+  d.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;transition:opacity .3s" id="tb-p1">
+      <div class="turn-dot" id="td-p1" style="background:var(--p1);color:var(--p1)"></div>
+      <span style="color:var(--p1l);font-weight:700">${p1Name}</span>
+    </div>
+    <span style="color:var(--mt);font-size:11px;letter-spacing:3px" id="tb-arrow">← YOUR TURN</span>
+    <div style="display:flex;align-items:center;gap:8px;transition:opacity .3s" id="tb-p2">
+      <span style="color:${p2Color()};font-weight:700">${p2Name}</span>
+      <div class="turn-dot" id="td-p2" style="background:${p2DotColor()};color:${p2DotColor()}"></div>
+    </div>`;
+  updateTurnBar(d,cur);
+  return d;
+}
+function updateTurnBar(bar,cur){
+  if(!bar) return;
+  const p1el=bar.querySelector('#tb-p1'),p2el=bar.querySelector('#tb-p2');
+  const td1=bar.querySelector('#td-p1'),td2=bar.querySelector('#td-p2');
+  const arr=bar.querySelector('#tb-arrow');
+  if(!p1el) return;
+  p1el.style.opacity=cur===1?'1':'0.3';
+  p2el.style.opacity=cur===2?'1':'0.3';
+  td1.classList.toggle('active',cur===1);
+  td2.classList.toggle('active',cur===2);
+  arr.textContent=cur===1?'← YOUR TURN':'YOUR TURN →';
+}
+function diffBadge(){
+  if(gameMode!=='bot') return null;
+  const d=document.createElement('div');
+  d.className='diff-badge '+botDiff;
+  d.textContent=DIFF_LABEL[botDiff]+' BOT';
+  return d;
+}
+
+/* ══════════════════════════════════════════════════════════
+   BOT AI HELPERS
+══════════════════════════════════════════════════════════ */
+
+/* ── TTT BOT ── */
+function tttBotMove(board, diff){
+  const empty=board.map((v,i)=>v===null?i:-1).filter(i=>i>=0);
+  if(!empty.length) return -1;
+  const LINES=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+  function checkLine(b,mark){
+    for(const [a,c,d] of LINES)
+      if(b[a]===mark&&b[c]===mark&&b[d]===null) return d;
+      else if(b[a]===mark&&b[d]===mark&&b[c]===null) return c;
+      else if(b[c]===mark&&b[d]===mark&&b[a]===null) return a;
+    return -1;
+  }
+  function minimax(b,isMax,depth){
+    const res=tttCheckWinner(b);
+    if(res==='O') return 10-depth;
+    if(res==='X') return depth-10;
+    const emp=b.map((v,i)=>v===null?i:-1).filter(i=>i>=0);
+    if(!emp.length) return 0;
+    if(isMax){
+      let best=-Infinity;
+      for(const i of emp){b[i]='O';best=Math.max(best,minimax(b,false,depth+1));b[i]=null;}
+      return best;
+    } else {
+      let best=Infinity;
+      for(const i of emp){b[i]='X';best=Math.min(best,minimax(b,true,depth+1));b[i]=null;}
+      return best;
+    }
+  }
+  function tttCheckWinner(b){
+    for(const [a,c,d] of LINES) if(b[a]&&b[a]===b[c]&&b[a]===b[d]) return b[a];
+    return null;
+  }
+
+  if(diff==='easy') return empty[Math.floor(Math.random()*empty.length)];
+
+  if(diff==='medium'){
+    // win if can
+    const win=checkLine(board,'O'); if(win>=0) return win;
+    // block player
+    const blk=checkLine(board,'X'); if(blk>=0) return blk;
+    // 50% random
+    if(Math.random()<0.5) return empty[Math.floor(Math.random()*empty.length)];
+    // center
+    if(board[4]===null) return 4;
+    return empty[Math.floor(Math.random()*empty.length)];
+  }
+
+  // HARD — perfect minimax
+  let best=-Infinity, move=empty[0];
+  for(const i of empty){
+    const b=[...board]; b[i]='O';
+    const val=minimax(b,false,0);
+    if(val>best){best=val;move=i;}
+  }
+  return move;
+}
+
+/* ── C4 BOT ── */
+function c4BotMove(board, diff, ROWS, COLS){
+  function getRow(b,col){
+    for(let r=ROWS-1;r>=0;r--) if(!b[r][col]) return r;
+    return -1;
+  }
+  function validCols(b){ return Array.from({length:COLS},(_,c)=>c).filter(c=>getRow(b,c)>=0); }
+  function copyBoard(b){ return b.map(r=>[...r]); }
+
+  function scoreWindow(w,p){
+    const opp=p===2?1:2;
+    let s=0;
+    const pc=w.filter(x=>x===p).length, ec=w.filter(x=>x===0).length, oc=w.filter(x=>x===opp).length;
+    if(pc===4) s+=1000;
+    else if(pc===3&&ec===1) s+=5;
+    else if(pc===2&&ec===2) s+=2;
+    if(oc===3&&ec===1) s-=4;
+    return s;
+  }
+  function scoreBoard(b,p){
+    let score=0;
+    // center col
+    const centerArr=b.map(r=>r[Math.floor(COLS/2)]);
+    score+=centerArr.filter(v=>v===p).length*3;
+    // horizontal
+    for(let r=0;r<ROWS;r++) for(let c=0;c<=COLS-4;c++) score+=scoreWindow(b[r].slice(c,c+4),p);
+    // vertical
+    for(let c=0;c<COLS;c++) for(let r=0;r<=ROWS-4;r++) score+=scoreWindow([b[r][c],b[r+1][c],b[r+2][c],b[r+3][c]],p);
+    // diag
+    for(let r=0;r<=ROWS-4;r++) for(let c=0;c<=COLS-4;c++){
+      score+=scoreWindow([b[r][c],b[r+1][c+1],b[r+2][c+2],b[r+3][c+3]],p);
+      score+=scoreWindow([b[r+3][c],b[r+2][c+1],b[r+1][c+2],b[r][c+3]],p);
+    }
+    return score;
+  }
+  function isTerminal(b){
+    // check win
+    function hasWon(p){
+      for(let r=0;r<ROWS;r++) for(let c=0;c<=COLS-4;c++) if(b[r][c]===p&&b[r][c+1]===p&&b[r][c+2]===p&&b[r][c+3]===p) return true;
+      for(let c=0;c<COLS;c++) for(let r=0;r<=ROWS-4;r++) if(b[r][c]===p&&b[r+1][c]===p&&b[r+2][c]===p&&b[r+3][c]===p) return true;
+      for(let r=0;r<=ROWS-4;r++) for(let c=0;c<=COLS-4;c++){
+        if(b[r][c]===p&&b[r+1][c+1]===p&&b[r+2][c+2]===p&&b[r+3][c+3]===p) return true;
+        if(b[r+3][c]===p&&b[r+2][c+1]===p&&b[r+1][c+2]===p&&b[r][c+3]===p) return true;
+      }
+      return false;
+    }
+    return hasWon(1)||hasWon(2)||!b[0].some(v=>v===0);
+  }
+  function minimax(b,depth,alpha,beta,isMax){
+    if(isTerminal(b)) return scoreBoard(b,2)-scoreBoard(b,1);
+    if(depth===0) return scoreBoard(b,2)-scoreBoard(b,1);
+    const cols=validCols(b);
+    if(isMax){
+      let val=-Infinity;
+      for(const c of cols){
+        const r=getRow(b,c); const nb=copyBoard(b); nb[r][c]=2;
+        val=Math.max(val,minimax(nb,depth-1,alpha,beta,false));
+        alpha=Math.max(alpha,val); if(alpha>=beta) break;
+      }
+      return val;
+    } else {
+      let val=Infinity;
+      for(const c of cols){
+        const r=getRow(b,c); const nb=copyBoard(b); nb[r][c]=1;
+        val=Math.min(val,minimax(nb,depth-1,alpha,beta,true));
+        beta=Math.min(beta,val); if(alpha>=beta) break;
+      }
+      return val;
+    }
+  }
+
+  const valid=validCols(board);
+  if(!valid.length) return -1;
+  if(diff==='easy') return valid[Math.floor(Math.random()*valid.length)];
+
+  // Check immediate win or block
+  for(const c of valid){
+    const r=getRow(board,c); const nb=copyBoard(board); nb[r][c]=2;
+    if(isTerminal(nb)&&scoreBoard(nb,2)>scoreBoard(nb,1)*1.5) return c;
+  }
+  for(const c of valid){
+    const r=getRow(board,c); const nb=copyBoard(board); nb[r][c]=1;
+    if(isTerminal(nb)&&scoreBoard(nb,1)>scoreBoard(nb,2)*1.5) return c;
+  }
+
+  if(diff==='medium'){
+    if(Math.random()<0.35) return valid[Math.floor(Math.random()*valid.length)];
+    let best=-Infinity, bestCol=valid[0];
+    for(const c of valid){
+      const r=getRow(board,c); const nb=copyBoard(board); nb[r][c]=2;
+      const val=minimax(nb,3,-Infinity,Infinity,false);
+      if(val>best){best=val;bestCol=c;}
+    }
+    return bestCol;
+  }
+  // HARD — depth 5
+  let best=-Infinity, bestCol=valid[Math.floor(valid.length/2)];
+  for(const c of valid){
+    const r=getRow(board,c); const nb=copyBoard(board); nb[r][c]=2;
+    const val=minimax(nb,5,-Infinity,Infinity,false);
+    if(val>best){best=val;bestCol=c;}
+  }
+  return bestCol;
+}
+
+/* ── MEMORY BOT ── */
+// The bot remembers cards it has seen (tracks revealed positions)
+let mmBotMemory={}; // idx -> emoji, filled as cards get revealed
+
+function mmBotPick(deck, flipped, diff){
+  // What the bot knows from memory
+  const unmatched=deck.map((c,i)=>(!c.matched&&!c.flipped)?i:-1).filter(i=>i>=0);
+  if(!unmatched.length) return -1;
+
+  if(diff==='easy'){
+    // Completely random, no memory
+    return unmatched[Math.floor(Math.random()*unmatched.length)];
+  }
+
+  if(diff==='medium'){
+    // Remembers ~50% of seen cards
+    if(flipped.length===1){
+      const firstEmoji=deck[flipped[0]].emoji;
+      // Check memory for a known match
+      for(const [idxStr,em] of Object.entries(mmBotMemory)){
+        const idx=parseInt(idxStr);
+        if(em===firstEmoji&&!deck[idx].matched&&!deck[idx].flipped&&idx!==flipped[0]&&Math.random()<0.5){
+          return idx;
+        }
+      }
+    }
+    return unmatched[Math.floor(Math.random()*unmatched.length)];
+  }
+
+  // HARD — perfect memory
+  if(flipped.length===1){
+    const firstEmoji=deck[flipped[0]].emoji;
+    for(const [idxStr,em] of Object.entries(mmBotMemory)){
+      const idx=parseInt(idxStr);
+      if(em===firstEmoji&&!deck[idx].matched&&!deck[idx].flipped&&idx!==flipped[0]) return idx;
+    }
+  }
+  // Pick a card it hasn't seen yet
+  const unseen=unmatched.filter(i=>!mmBotMemory[i]);
+  if(unseen.length) return unseen[Math.floor(Math.random()*unseen.length)];
+  return unmatched[Math.floor(Math.random()*unmatched.length)];
+}
+
+/* ══════════════════════════════════════════════════════════
+   GAME 1 · TIC-TAC-TOE (with bot + alternating first move)
+══════════════════════════════════════════════════════════ */
+function buildTTT(area){
+  area.innerHTML='';
+  const wrap=document.createElement('div'); wrap.id='ttt-wrap'; wrap.className='slide-up';
+  area.appendChild(wrap);
+
+  const isBot=gameMode==='bot';
+  const LINES=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+  // firstMover alternates each game: true = P1/X goes first, false = P2/O goes first
+  let firstMover=true;
+  let board=Array(9).fill(null);
+  let xNext=firstMover, over=false, botThinking=false;
+  let gameCount=0; // counts completed games so we can show who goes first
+
+  const db=diffBadge(); if(db) wrap.appendChild(db);
+  const tb=createTurnBar(xNext?1:2); wrap.appendChild(tb);
+
+  // "Who goes first" notice bar
+  const firstNotice=document.createElement('div');
+  firstNotice.style.cssText='font-size:11px;letter-spacing:2px;color:var(--mt);margin-bottom:4px;text-align:center;min-height:18px;';
+  wrap.appendChild(firstNotice);
+
+  // bot thinking indicator
+  let thinkEl=null;
+  if(isBot){
+    thinkEl=document.createElement('div');
+    thinkEl.style.cssText='min-height:24px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--botl);letter-spacing:2px;';
+    wrap.appendChild(thinkEl);
+  }
+
+  const grid=document.createElement('div'); grid.className='ttt-grid';
+  const cells=[];
+  for(let i=0;i<9;i++){
+    const btn=document.createElement('button'); btn.className='ttt-cell btn';
+    btn.onclick=()=>click(i); grid.appendChild(btn); cells.push(btn);
+  }
+  wrap.appendChild(grid);
+
+  const hint=document.createElement('div'); hint.className='ttt-hint'; wrap.appendChild(hint);
+  const resetBtn=document.createElement('button'); resetBtn.className='reset-btn btn';
+  resetBtn.textContent='RESET BOARD'; resetBtn.onclick=reset; wrap.appendChild(resetBtn);
+
+  function updateFirstNotice(){
+    if(gameCount===0){
+      firstNotice.textContent='';
+    } else {
+      const who=firstMover?p1Name:p2Name;
+      const col=firstMover?'var(--p1l)':(isBot?'var(--botl)':'var(--p2l)');
+      firstNotice.innerHTML=`<span style="color:${col}">${who}</span> goes first this round`;
+    }
+  }
+
+  function checkWin(b){
+    for(const [a,c,d] of LINES) if(b[a]&&b[a]===b[c]&&b[a]===b[d]) return{w:b[a],line:[a,c,d]};
+    if(b.every(Boolean)) return{w:'tie',line:[]};
+    return null;
+  }
+  function render(){
+    cells.forEach((btn,i)=>{
+      btn.textContent=board[i]||'';
+      const cls=['ttt-cell','btn'];
+      if(board[i]==='X') cls.push('x');
+      if(board[i]==='O'){cls.push('o'); if(isBot) cls.push('bot');}
+      btn.className=cls.join(' ');
+      btn.dataset.filled=board[i]?'y':'';
+    });
+    if(!over) hint.textContent=`${xNext?p1Name:p2Name} plays ${xNext?'X':'O'}`;
+  }
+  function finishMove(){
+    const res=checkWin(board);
+    if(res){
+      over=true;
+      res.line.forEach(idx=>{
+        const cl=cells[idx].classList;
+        cl.add(res.w==='X'?'win-x':'win-o');
+        if(isBot&&res.w==='O') cl.add('bot');
+      });
+      hint.textContent=''; tb.style.display='none';
+      const winner=res.w==='X'?1:res.w==='O'?2:null;
+      if(winner) recordWin(winner);
+      wrap.style.position='relative';
+      // Show who goes first NEXT game in the win overlay sub-text
+      const nextFirst=firstMover?p2Name:p1Name;
+      const roundSub=res.w==='tie'
+        ?`Next round: ${nextFirst} goes first`
+        :isBot&&res.w==='O'
+          ?`The bot wins! Next round: ${nextFirst} goes first`
+          :`Next round: ${nextFirst} goes first`;
+      wrap.appendChild(createWinOverlay(
+        res.w==='tie'?'DRAW!':`${res.w==='X'?p1Name:p2Name} WINS!`,
+        roundSub,
+        reset));
+    }
+  }
+  function doBotMove(){
+    if(over||botThinking) return;
+    botThinking=true;
+    if(thinkEl) thinkEl.innerHTML='<div class="bot-thinking"><span></span><span></span><span></span></div>&nbsp;BOT THINKING';
+    const delay=botDiff==='easy'?400:botDiff==='medium'?700:900;
+    setTimeout(()=>{
+      const move=tttBotMove(board,botDiff);
+      if(move>=0&&!board[move]){
+        board[move]='O'; xNext=true;
+        updateTurnBar(tb,1); render(); finishMove();
+      }
+      botThinking=false;
+      if(thinkEl) thinkEl.innerHTML='';
+    },delay);
+  }
+  function click(i){
+    if(board[i]||over||botThinking) return;
+    if(isBot&&!xNext) return;
+    board[i]=xNext?'X':'O';
+    xNext=!xNext;
+    updateTurnBar(tb,xNext?1:2);
+    render(); finishMove();
+    if(!over&&isBot&&!xNext) doBotMove();
+  }
+  function reset(){
+    gameCount++;
+    // Flip who goes first every game
+    firstMover=!firstMover;
+    board=Array(9).fill(null);
+    xNext=firstMover;
+    over=false; botThinking=false;
+    wrap.querySelectorAll('.win-overlay').forEach(e=>e.remove());
+    tb.style.display=''; updateTurnBar(tb,xNext?1:2);
+    if(thinkEl) thinkEl.innerHTML='';
+    updateFirstNotice();
+    render();
+    // If bot goes first (P2/O = not xNext when firstMover=false)
+    if(isBot&&!xNext) doBotMove();
+  }
+  updateFirstNotice();
+  render();
+}
+
+/* ══════════════════════════════════════════════════════════
+   GAME 2 · CONNECT FOUR (with bot)
+══════════════════════════════════════════════════════════ */
+function buildC4(area){
+  area.innerHTML='';
+  const ROWS=6,COLS=7;
+  const wrap=document.createElement('div'); wrap.id='c4-wrap'; wrap.className='slide-up';
+  area.appendChild(wrap);
+
+  const isBot=gameMode==='bot';
+  let board=Array(ROWS).fill(null).map(()=>Array(COLS).fill(0));
+  let turn=1,over=false,animating=false,botThinking=false;
+
+  const db=diffBadge(); if(db) wrap.appendChild(db);
+  const tb=createTurnBar(1); wrap.appendChild(tb);
+
+  let thinkEl=null;
+  if(isBot){
+    thinkEl=document.createElement('div');
+    thinkEl.style.cssText='min-height:22px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--botl);letter-spacing:2px;';
+    wrap.appendChild(thinkEl);
+  }
+
+  const boardDiv=document.createElement('div'); boardDiv.className='c4-board';
+  const hoverRow=document.createElement('div'); hoverRow.className='c4-hover-row';
+  const hoverDots=[];
+  for(let c=0;c<COLS;c++){const hc=document.createElement('div');hc.className='c4-hover-cell';hoverRow.appendChild(hc);hoverDots.push(hc);}
+  boardDiv.appendChild(hoverRow);
+
+  const gridDiv=document.createElement('div'); gridDiv.className='c4-grid';
+  const cellEls=[];
+  for(let r=0;r<ROWS;r++){
+    const row=document.createElement('div'); row.className='c4-row'; cellEls.push([]);
+    for(let c=0;c<COLS;c++){
+      const cell=document.createElement('div'); cell.className='c4-cell';
+      cell.onclick=()=>drop(c);
+      cell.onmouseenter=()=>setHover(c);
+      cell.onmouseleave=()=>setHover(-1);
+      row.appendChild(cell); cellEls[r].push(cell);
+    }
+    gridDiv.appendChild(row);
+  }
+  boardDiv.appendChild(gridDiv);
+  wrap.appendChild(boardDiv);
+
+  const resetBtn=document.createElement('button'); resetBtn.className='reset-btn btn';
+  resetBtn.textContent='RESET BOARD'; resetBtn.onclick=reset; wrap.appendChild(resetBtn);
+
+  let hoverCol=-1;
+  function setHover(c){
+    hoverCol=c;
+    hoverDots.forEach((d,i)=>{
+      if(i===c&&!over&&!animating&&!botThinking&&turn===1){
+        d.innerHTML=`<div style="width:16px;height:16px;border-radius:50%;background:var(--p1);box-shadow:0 0 8px var(--p1);opacity:.85"></div>`;
+      } else d.innerHTML='';
+    });
+    cellEls.forEach((row,r)=>row.forEach((cell,ci)=>{
+      if(!board[r][ci]&&ci===c&&!over&&!animating&&!botThinking&&turn===1) cell.classList.add('hover-hint');
+      else cell.classList.remove('hover-hint');
+    }));
+  }
+  function checkWin(b,row,col,p){
+    const dirs=[[0,1],[1,0],[1,1],[1,-1]];
+    for(const [dr,dc] of dirs){
+      let cells=[[row,col]];
+      for(let s=1;s<=3;s++){const r=row+dr*s,c=col+dc*s;if(r>=0&&r<ROWS&&c>=0&&c<COLS&&b[r][c]===p)cells.push([r,c]);else break;}
+      for(let s=1;s<=3;s++){const r=row-dr*s,c=col-dc*s;if(r>=0&&r<ROWS&&c>=0&&c<COLS&&b[r][c]===p)cells.push([r,c]);else break;}
+      if(cells.length>=4) return cells;
+    }
+    return null;
+  }
+  function dropChip(col,player,callback){
+    let row=-1;
+    for(let r=ROWS-1;r>=0;r--){if(!board[r][col]){row=r;break;}}
+    if(row===-1){callback&&callback(false);return;}
+    animating=true;
+    board[row][col]=player;
+    const cell=cellEls[row][col];
+    const cls=player===1?'p1':(isBot?'bot':'p2');
+    cell.classList.add(cls,'chip-drop');
+    setTimeout(()=>{
+      cell.classList.remove('chip-drop');
+      const wc=checkWin(board,row,col,player);
+      if(wc){
+        over=true; wc.forEach(([r,c])=>cellEls[r][c].classList.add('win-cell'));
+        recordWin(player); tb.style.display='none';
+        wrap.style.position='relative';
+        wrap.appendChild(createWinOverlay(
+          `${player===1?p1Name:p2Name} WINS!`,'4 in a row!',reset));
+      } else if(board[0].every((_,c)=>board[0][c]!==0)){
+        over=true; wrap.style.position='relative';
+        wrap.appendChild(createWinOverlay('DRAW!','Board is full',reset));
+      }
+      animating=false; callback&&callback(true);
+    },380);
+  }
+  function doBotTurn(){
+    if(over||botThinking) return;
+    botThinking=true;
+    if(thinkEl) thinkEl.innerHTML='<div class="bot-thinking"><span></span><span></span><span></span></div>&nbsp;BOT THINKING';
+    const delay=botDiff==='easy'?450:botDiff==='medium'?750:950;
+    setTimeout(()=>{
+      if(thinkEl) thinkEl.innerHTML='';
+      const col=c4BotMove(board,botDiff,ROWS,COLS);
+      if(col>=0){
+        dropChip(col,2,()=>{
+          botThinking=false;
+          if(!over){turn=1;updateTurnBar(tb,1);setHover(hoverCol);}
+        });
+      } else botThinking=false;
+    },delay);
+  }
+  function drop(col){
+    if(over||animating||botThinking) return;
+    if(isBot&&turn!==1) return;
+    dropChip(col,1,ok=>{
+      if(ok&&!over){
+        if(isBot){turn=2;updateTurnBar(tb,2);doBotTurn();}
+        else{turn=turn===1?2:1;updateTurnBar(tb,turn);setHover(hoverCol);}
+      }
+    });
+  }
+  function reset(){
+    board=Array(ROWS).fill(null).map(()=>Array(COLS).fill(0));
+    turn=1;over=false;animating=false;botThinking=false;hoverCol=-1;
+    cellEls.forEach(row=>row.forEach(c=>{c.className='c4-cell';}));
+    hoverDots.forEach(d=>d.innerHTML='');
+    wrap.querySelectorAll('.win-overlay').forEach(e=>e.remove());
+    tb.style.display='';updateTurnBar(tb,1);
+    if(thinkEl) thinkEl.innerHTML='';
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   GAME 3 · AIR HOCKEY (with bot AI paddle)
+══════════════════════════════════════════════════════════ */
+const AH={W:680,H:400,PR:22,PK:13,GH:120,WIN:5,MS:15,FR:.994};
+
+function stopAirHockey(){
+  if(ahRAF){cancelAnimationFrame(ahRAF);ahRAF=null;}
+  window.removeEventListener('keydown',ahKeyDown);
+  window.removeEventListener('keyup',ahKeyUp);
+  ahKeys={};
+}
+function ahKeyDown(e){ahKeys[e.key]=true;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();}
+function ahKeyUp(e){delete ahKeys[e.key];}
+
+function buildAH(area){
+  area.innerHTML='';
+  const isBot=gameMode==='bot';
+  const wrap=document.createElement('div'); wrap.id='ah-wrap'; wrap.className='slide-up';
+  area.appendChild(wrap);
+
+  const db=diffBadge(); if(db) wrap.appendChild(db);
+
+  const ctrlDiv=document.createElement('div'); ctrlDiv.className='ah-controls';
+  if(isBot){
+    ctrlDiv.innerHTML=`<span><span style="color:var(--p1l)">◈ ${p1Name}:</span> <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><span>First to <b style="color:var(--tx)">${AH.WIN}</b> wins</span><span style="color:var(--botl)">🤖 BOT controls right paddle</span>`;
+  } else {
+    ctrlDiv.innerHTML=`<span><span style="color:var(--p1l)">◈ ${p1Name}:</span> <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><span>First to <b style="color:var(--tx)">${AH.WIN}</b> wins</span><span><span style="color:var(--p2l)">◈ ${p2Name}:</span> <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd></span>`;
+  }
+  wrap.appendChild(ctrlDiv);
+
+  const canvasWrap=document.createElement('div'); canvasWrap.style.position='relative';
+  const canvas=document.createElement('canvas');
+  canvas.id='ah-canvas'; canvas.width=AH.W; canvas.height=AH.H;
+  canvasWrap.appendChild(canvas); wrap.appendChild(canvasWrap);
+
+  const hint=document.createElement('div'); hint.className='ah-hint';
+  hint.textContent=isBot?'BOT CONTROLS RIGHT SIDE · PADDLES LOCKED TO HALF':'PADDLES LOCKED TO THEIR HALF · CIRCLE PHYSICS';
+  wrap.appendChild(hint);
+
+  const ctx=canvas.getContext('2d');
+  const GY=(AH.H-AH.GH)/2;
+  let scores=[0,0];
+
+  function makeState(){
+    return{
+      puck:{x:AH.W/2,y:AH.H/2,vx:4*(Math.random()>.5?1:-1),vy:(Math.random()-.5)*4},
+      p1:{x:AH.PR+28,y:AH.H/2,vx:0,vy:0},
+      p2:{x:AH.W-AH.PR-28,y:AH.H/2,vx:0,vy:0},
+      paused:true,pauseEnd:Date.now()+2000
+    };
+  }
+  let st=makeState();
+
+  function resetPuck(dirX){
+    st.puck={x:AH.W/2,y:AH.H/2,vx:dirX*4,vy:(Math.random()-.5)*3};
+    st.paused=true; st.pauseEnd=Date.now()+1800;
+  }
+  function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
+  function circleHit(puck,pad){
+    const dx=puck.x-pad.x,dy=puck.y-pad.y,dist=Math.hypot(dx,dy),minD=AH.PK+AH.PR;
+    if(dist<minD&&dist>0){
+      const nx=dx/dist,ny=dy/dist;
+      puck.x=pad.x+nx*minD; puck.y=pad.y+ny*minD;
+      const dot=puck.vx*nx+puck.vy*ny;
+      const boost=1+Math.min(Math.hypot(pad.vx,pad.vy)*.12,1.0);
+      puck.vx=(puck.vx-2*dot*nx+pad.vx*.45)*boost;
+      puck.vy=(puck.vy-2*dot*ny+pad.vy*.45)*boost;
+      const spd=Math.hypot(puck.vx,puck.vy);
+      if(spd>AH.MS){puck.vx*=AH.MS/spd;puck.vy*=AH.MS/spd;}
+    }
+  }
+
+  // Bot AI for p2 paddle
+  function moveBotPaddle(){
+    const SPD=botDiff==='easy'?2.5:botDiff==='medium'?4:5.8;
+    const NOISE=botDiff==='easy'?0.5:botDiff==='medium'?0.25:0;
+    // predict puck position
+    let tx=st.puck.x+(Math.random()-0.5)*80*NOISE;
+    let ty=st.puck.y+(Math.random()-0.5)*80*NOISE;
+    // on easy, bot only follows puck on y when puck is in its half
+    if(botDiff==='easy'&&st.puck.x<AH.W/2) ty=AH.H/2;
+    // move toward puck y; keep x near center of right half
+    const targetX=botDiff==='hard'?(st.puck.x>AH.W/2?st.puck.x-10:AH.W*0.75):AH.W*0.75;
+    const pp={x:st.p2.x,y:st.p2.y};
+    if(st.p2.x<targetX) st.p2.x+=Math.min(SPD,targetX-st.p2.x);
+    else st.p2.x-=Math.min(SPD,st.p2.x-targetX);
+    if(st.p2.y<ty) st.p2.y+=Math.min(SPD,ty-st.p2.y);
+    else st.p2.y-=Math.min(SPD,st.p2.y-ty);
+    st.p2.x=clamp(st.p2.x,AH.W/2+AH.PR,AH.W-AH.PR-2);
+    st.p2.y=clamp(st.p2.y,AH.PR+2,AH.H-AH.PR-2);
+    st.p2.vx=st.p2.x-pp.x; st.p2.vy=st.p2.y-pp.y;
+  }
+
+  function update(){
+    if(st.paused){if(Date.now()>=st.pauseEnd)st.paused=false;return;}
+    const SPD=5.5;
+    const pp1={x:st.p1.x,y:st.p1.y};
+    if(ahKeys['w']||ahKeys['W'])st.p1.y-=SPD;
+    if(ahKeys['s']||ahKeys['S'])st.p1.y+=SPD;
+    if(ahKeys['a']||ahKeys['A'])st.p1.x-=SPD;
+    if(ahKeys['d']||ahKeys['D'])st.p1.x+=SPD;
+    st.p1.x=clamp(st.p1.x,AH.PR+2,AH.W/2-AH.PR);
+    st.p1.y=clamp(st.p1.y,AH.PR+2,AH.H-AH.PR-2);
+    st.p1.vx=st.p1.x-pp1.x; st.p1.vy=st.p1.y-pp1.y;
+
+    if(isBot){
+      moveBotPaddle();
+    } else {
+      const pp2={x:st.p2.x,y:st.p2.y};
+      if(ahKeys['ArrowUp'])st.p2.y-=SPD;
+      if(ahKeys['ArrowDown'])st.p2.y+=SPD;
+      if(ahKeys['ArrowLeft'])st.p2.x-=SPD;
+      if(ahKeys['ArrowRight'])st.p2.x+=SPD;
+      st.p2.x=clamp(st.p2.x,AH.W/2+AH.PR,AH.W-AH.PR-2);
+      st.p2.y=clamp(st.p2.y,AH.PR+2,AH.H-AH.PR-2);
+      st.p2.vx=st.p2.x-pp2.x; st.p2.vy=st.p2.y-pp2.y;
+    }
+
+    st.puck.x+=st.puck.vx; st.puck.y+=st.puck.vy;
+    st.puck.vx*=AH.FR; st.puck.vy*=AH.FR;
+    if(st.puck.y-AH.PK<0){st.puck.y=AH.PK;st.puck.vy=Math.abs(st.puck.vy);}
+    if(st.puck.y+AH.PK>AH.H){st.puck.y=AH.H-AH.PK;st.puck.vy=-Math.abs(st.puck.vy);}
+    if(st.puck.x-AH.PK<0){
+      if(st.puck.y>GY&&st.puck.y<GY+AH.GH){
+        scores[1]++;updateScoreDisplay();
+        if(scores[1]>=AH.WIN){endGame(2);return;}
+        resetPuck(1);
+      } else{st.puck.x=AH.PK;st.puck.vx=Math.abs(st.puck.vx);}
+    }
+    if(st.puck.x+AH.PK>AH.W){
+      if(st.puck.y>GY&&st.puck.y<GY+AH.GH){
+        scores[0]++;updateScoreDisplay();
+        if(scores[0]>=AH.WIN){endGame(1);return;}
+        resetPuck(-1);
+      } else{st.puck.x=AH.W-AH.PK;st.puck.vx=-Math.abs(st.puck.vx);}
+    }
+    circleHit(st.puck,st.p1);
+    circleHit(st.puck,st.p2);
+  }
+
+  function draw(){
+    const {W,H,PR,PK,GH}=AH;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d0d0f';ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle='rgba(99,102,241,.06)';ctx.lineWidth=1;
+    for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+    ctx.strokeStyle='rgba(99,102,241,.25)';ctx.lineWidth=2;ctx.strokeRect(2,2,W-4,H-4);
+    ctx.fillStyle='rgba(244,63,94,.12)';ctx.fillRect(0,GY,8,GH);
+    ctx.strokeStyle='rgba(244,63,94,.6)';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(0,GY);ctx.lineTo(8,GY);ctx.lineTo(8,GY+GH);ctx.lineTo(0,GY+GH);ctx.stroke();
+    ctx.fillStyle='rgba(99,102,241,.12)';ctx.fillRect(W-8,GY,8,GH);
+    ctx.strokeStyle='rgba(99,102,241,.6)';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(W,GY);ctx.lineTo(W-8,GY);ctx.lineTo(W-8,GY+GH);ctx.lineTo(W,GY+GH);ctx.stroke();
+    ctx.setLineDash([10,8]);ctx.strokeStyle='rgba(255,255,255,.08)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.stroke();ctx.setLineDash([]);
+    ctx.strokeStyle='rgba(255,255,255,.06)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(W/2,H/2,60,0,Math.PI*2);ctx.stroke();
+    if(st.paused){
+      const rem=Math.ceil((st.pauseEnd-Date.now())/1000);
+      if(rem>0){
+        ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillRect(0,0,W,H);
+        ctx.font="bold 64px 'Orbitron',monospace";ctx.fillStyle='#fff';
+        ctx.textAlign='center';ctx.fillText(rem,W/2,H/2+20);
+      }
+    }
+    ctx.font="bold 28px 'Orbitron',monospace";ctx.textAlign='center';
+    ctx.fillStyle='#818cf8';ctx.fillText(scores[0],W/2-90,38);
+    ctx.fillStyle=isBot?'#fcd34d':'#fb7185';ctx.fillText(scores[1],W/2+90,38);
+    ctx.font="11px 'Share Tech Mono',monospace";ctx.fillStyle='rgba(255,255,255,.3)';
+    ctx.fillText(p1Name,W/4,22);ctx.fillText(p2Name,3*W/4,22);
+    // p1 paddle
+    const g1=ctx.createRadialGradient(st.p1.x-4,st.p1.y-4,0,st.p1.x,st.p1.y,PR);
+    g1.addColorStop(0,'#818cf8');g1.addColorStop(1,'#312e81');
+    ctx.beginPath();ctx.arc(st.p1.x,st.p1.y,PR,0,Math.PI*2);
+    ctx.fillStyle=g1;ctx.fill();
+    ctx.strokeStyle='#818cf8';ctx.lineWidth=2;ctx.shadowColor='#6366f1';ctx.shadowBlur=16;ctx.stroke();ctx.shadowBlur=0;
+    ctx.beginPath();ctx.arc(st.p1.x,st.p1.y,PR*.45,0,Math.PI*2);
+    ctx.strokeStyle='rgba(255,255,255,.35)';ctx.lineWidth=1.5;ctx.stroke();
+    // p2/bot paddle
+    const p2c1=isBot?'#fcd34d':'#fb7185';const p2c2=isBot?'#92400e':'#881337';const p2stroke=isBot?'#fcd34d':'#fb7185';const p2shadow=isBot?'#f59e0b':'#f43f5e';
+    const g2=ctx.createRadialGradient(st.p2.x-4,st.p2.y-4,0,st.p2.x,st.p2.y,PR);
+    g2.addColorStop(0,p2c1);g2.addColorStop(1,p2c2);
+    ctx.beginPath();ctx.arc(st.p2.x,st.p2.y,PR,0,Math.PI*2);
+    ctx.fillStyle=g2;ctx.fill();
+    ctx.strokeStyle=p2stroke;ctx.lineWidth=2;ctx.shadowColor=p2shadow;ctx.shadowBlur=16;ctx.stroke();ctx.shadowBlur=0;
+    ctx.beginPath();ctx.arc(st.p2.x,st.p2.y,PR*.45,0,Math.PI*2);
+    ctx.strokeStyle='rgba(255,255,255,.35)';ctx.lineWidth=1.5;ctx.stroke();
+    if(isBot){
+      ctx.font="bold 10px 'Share Tech Mono',monospace";ctx.fillStyle='rgba(0,0,0,.7)';
+      ctx.textAlign='center';ctx.fillText('AI',st.p2.x,st.p2.y+4);
+    }
+    // puck
+    const gp=ctx.createRadialGradient(st.puck.x-3,st.puck.y-3,0,st.puck.x,st.puck.y,PK);
+    gp.addColorStop(0,'#f0f0f0');gp.addColorStop(1,'#555');
+    ctx.beginPath();ctx.arc(st.puck.x,st.puck.y,PK,0,Math.PI*2);
+    ctx.fillStyle=gp;ctx.fill();
+    ctx.strokeStyle='#888';ctx.lineWidth=1.5;ctx.shadowColor='rgba(255,255,255,.3)';ctx.shadowBlur=8;ctx.stroke();ctx.shadowBlur=0;
+  }
+
+  function loop(){update();draw();ahRAF=requestAnimationFrame(loop);}
+  function endGame(winner){
+    stopAirHockey(); recordWin(winner);
+    canvasWrap.style.position='relative';
+    canvasWrap.appendChild(createWinOverlay(
+      `${winner===1?p1Name:p2Name} WINS!`,
+      `${scores[0]} — ${scores[1]}`,
+      ()=>{canvasWrap.querySelectorAll('.win-overlay').forEach(e=>e.remove());scores=[0,0];st=makeState();window.addEventListener('keydown',ahKeyDown);window.addEventListener('keyup',ahKeyUp);ahRAF=requestAnimationFrame(loop);}
+    ));
+  }
+  window.addEventListener('keydown',ahKeyDown);
+  window.addEventListener('keyup',ahKeyUp);
+  ahRAF=requestAnimationFrame(loop);
+}
+
+/* ══════════════════════════════════════════════════════════
+   GAME 4 · MEMORY MATCH (with bot)
+══════════════════════════════════════════════════════════ */
+const MM_EMOJIS=['🐲','⚡','🌊','🔥','🌙','💎','🎯','🚀','🎸','👾','🦋','🌺'];
+
+function buildMM(area){
+  area.innerHTML='';
+  const wrap=document.createElement('div'); wrap.id='mm-wrap'; wrap.className='slide-up';
+  area.appendChild(wrap);
+
+  const isBot=gameMode==='bot';
+  mmBotMemory={};
+
+  let deck=[],flipped=[],scores=[0,0],curPlayer=1,processing=false,over=false,totalMatched=0;
+
+  function makeDeck(){
+    const pairs=[...MM_EMOJIS,...MM_EMOJIS];
+    for(let i=pairs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pairs[i],pairs[j]]=[pairs[j],pairs[i]];}
+    return pairs.map((e,i)=>({id:i,emoji:e,flipped:false,matched:false}));
+  }
+
+  const db=diffBadge(); if(db) wrap.appendChild(db);
+
+  const scoreRow=document.createElement('div'); scoreRow.className='mm-score-row';
+  const p2col=isBot?'var(--botl)':'var(--p2l)';
+  scoreRow.innerHTML=`
+    <div class="mm-score-card active-p1" id="mm-sc1">
+      <div class="mm-sname" style="color:var(--p1l)">◈ ${p1Name}</div>
+      <div class="mm-snum orb" id="mm-sn1">0</div>
+    </div>
+    <div class="mm-mid">
+      <div class="mm-flash" id="mm-flash">PAIRS</div>
+      <div class="mm-pairs-left" id="mm-pairs-left">0/${MM_EMOJIS.length}</div>
+    </div>
+    <div class="mm-score-card" id="mm-sc2">
+      <div class="mm-sname" style="color:${p2col}">${isBot?'🤖 ':''} ${p2Name}</div>
+      <div class="mm-snum orb" id="mm-sn2">0</div>
+    </div>`;
+  wrap.appendChild(scoreRow);
+
+  const turnDiv=document.createElement('div'); turnDiv.className='mm-turn'; turnDiv.id='mm-turn'; wrap.appendChild(turnDiv);
+
+  let thinkEl=null;
+  if(isBot){
+    thinkEl=document.createElement('div');
+    thinkEl.style.cssText='min-height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--botl);letter-spacing:2px;';
+    wrap.appendChild(thinkEl);
+  }
+
+  const grid=document.createElement('div'); grid.className='mm-grid'; wrap.appendChild(grid);
+  const resetBtn=document.createElement('button'); resetBtn.className='reset-btn btn';
+  resetBtn.textContent='RESET GAME'; resetBtn.onclick=reset; wrap.appendChild(resetBtn);
+
+  function renderTurn(){
+    const isP1=curPlayer===1;
+    const col=isP1?'var(--p1l)':p2col;
+    const name=isP1?p1Name:p2Name;
+    turnDiv.style.color=col; turnDiv.style.borderColor=col+'40';
+    turnDiv.textContent=`${name}'S TURN ${processing?'…':'↓'}`;
+    document.getElementById('mm-sc1').className='mm-score-card'+(isP1?' active-p1':'');
+    document.getElementById('mm-sc2').className='mm-score-card'+(!isP1?(isBot?' active-bot':' active-p2'):'');
+  }
+  function renderScores(){
+    document.getElementById('mm-sn1').textContent=scores[0];
+    document.getElementById('mm-sn2').textContent=scores[1];
+    document.getElementById('mm-pairs-left').textContent=`${totalMatched}/${MM_EMOJIS.length}`;
+  }
+  function setFlash(type){
+    const el=document.getElementById('mm-flash');
+    el.className='mm-flash'+(type?' '+type:'');
+    el.textContent=type==='match'?'✓ MATCH!':type==='miss'?'✗ MISS':processing?'···':'PAIRS';
+  }
+  function buildGrid(){
+    grid.innerHTML='';
+    deck.forEach((card,i)=>{
+      const scene=document.createElement('div'); scene.className='card-scene';
+      const inner=document.createElement('div');
+      inner.className='card-inner'+(card.flipped||card.matched?' flipped':'');
+      inner.id=`card-inner-${i}`;
+      const back=document.createElement('div'); back.className='card-face card-back'; back.textContent='?';
+      const front=document.createElement('div');
+      front.className='card-face card-front'+(card.matched?' matched':'');
+      front.textContent=card.emoji;
+      inner.appendChild(back); inner.appendChild(front);
+      scene.appendChild(inner);
+      if(!card.matched&&!card.flipped){
+        scene.style.cursor='pointer';
+        scene.onclick=()=>flipCard(i);
+      }
+      grid.appendChild(scene);
+    });
+  }
+
+  function doFlip(idx, andThen){
+    deck[idx].flipped=true;
+    document.getElementById(`card-inner-${idx}`)?.classList.add('flipped');
+    // Record in bot memory
+    if(isBot) mmBotMemory[idx]=deck[idx].emoji;
+    grid.children[idx].style.cursor='default';
+    grid.children[idx].onclick=null;
+    if(andThen) andThen();
+  }
+
+  function evaluatePair(firstIdx,secondIdx){
+    processing=true; renderTurn();
+    if(deck[firstIdx].emoji===deck[secondIdx].emoji){
+      setFlash('match');
+      setTimeout(()=>{
+        deck[firstIdx].matched=true; deck[secondIdx].matched=true;
+        deck[firstIdx].flipped=true; deck[secondIdx].flipped=true;
+        scores[curPlayer-1]++; totalMatched++;
+        renderScores();
+        [firstIdx,secondIdx].forEach(i=>{
+          document.getElementById(`card-inner-${i}`)?.querySelector('.card-front')?.classList.add('matched');
+        });
+        flipped=[]; processing=false; setFlash(''); renderTurn();
+        if(totalMatched>=MM_EMOJIS.length){ endGame(); return; }
+        // same player again — if bot, do another bot turn
+        if(isBot&&curPlayer===2) scheduleBotTurn();
+      },600);
+    } else {
+      setFlash('miss');
+      setTimeout(()=>{
+        deck[firstIdx].flipped=false; deck[secondIdx].flipped=false;
+        [firstIdx,secondIdx].forEach(i=>{
+          document.getElementById(`card-inner-${i}`)?.classList.remove('flipped');
+          const s=grid.children[i];
+          if(s&&!deck[i].matched){s.style.cursor='pointer';s.onclick=()=>flipCard(i);}
+        });
+        flipped=[]; processing=false;
+        curPlayer=curPlayer===1?2:1;
+        setFlash(''); renderTurn();
+        if(isBot&&curPlayer===2) scheduleBotTurn();
+      },1000);
+    }
+  }
+
+  function flipCard(idx){
+    if(processing||over||deck[idx].matched||deck[idx].flipped) return;
+    if(isBot&&curPlayer===2) return; // bot's turn
+    if(flipped.length===1&&flipped[0]===idx) return;
+    doFlip(idx,()=>{
+      if(flipped.length===0){ flipped=[idx]; return; }
+      const first=flipped[0]; flipped=[first,idx];
+      evaluatePair(first,idx);
+    });
+  }
+
+  function scheduleBotTurn(){
+    if(over) return;
+    const delay1=botDiff==='easy'?800:botDiff==='medium'?900:700;
+    if(thinkEl) thinkEl.innerHTML='<div class="bot-thinking"><span></span><span></span><span></span></div>&nbsp;BOT PICKING...';
+    setTimeout(()=>{
+      if(over) return;
+      const first=mmBotPick(deck,[],botDiff);
+      if(first<0) return;
+      doFlip(first,()=>{
+        flipped=[first];
+        const delay2=botDiff==='easy'?800:botDiff==='medium'?700:500;
+        setTimeout(()=>{
+          if(over) return;
+          if(thinkEl) thinkEl.innerHTML='';
+          const second=mmBotPick(deck,[first],botDiff);
+          if(second<0||second===first) return;
+          doFlip(second,()=>{
+            flipped=[first,second];
+            evaluatePair(first,second);
+          });
+        },delay2);
+      });
+    },delay1);
+  }
+
+  function endGame(){
+    over=true; turnDiv.style.display='none';
+    if(thinkEl) thinkEl.innerHTML='';
+    const w=scores[0]>scores[1]?1:scores[1]>scores[0]?2:'tie';
+    if(w!=='tie') recordWin(w);
+    wrap.style.position='relative';
+    wrap.appendChild(createWinOverlay(
+      w==='tie'?'DRAW!':`${w===1?p1Name:p2Name} WINS!`,
+      `Final: ${scores[0]} – ${scores[1]}`,
+      reset));
+  }
+
+  function reset(){
+    mmBotMemory={};
+    deck=makeDeck();flipped=[];scores=[0,0];curPlayer=1;
+    processing=false;over=false;totalMatched=0;
+    wrap.querySelectorAll('.win-overlay').forEach(e=>e.remove());
+    turnDiv.style.display='';
+    if(thinkEl) thinkEl.innerHTML='';
+    renderScores();renderTurn();setFlash('');buildGrid();
+  }
+
+  deck=makeDeck();
+  renderScores(); renderTurn(); buildGrid();
+}
+
+/* init */
+updateScoreDisplay();
+</script>
+</body>
+</html>
